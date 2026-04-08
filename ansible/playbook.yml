@@ -1,0 +1,26 @@
+---
+- name: Deploy Docker container for RunCalc Pro
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Pull Docker image
+      docker_image:
+        name: cloudz04/devops-assessment
+        tag: "{{ image_tag }}"
+        source: pull
+
+    - name: Run Docker container
+      docker_container:
+        name: runcalc_pro
+        image: cloudz04/devops-assessment:{{ image_tag }}
+        state: started
+        restart_policy: always
+        ports:
+          - "80:80"
