@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/CloudZ04/assignment-2-cd.git'
+                git branch: 'main', url: 'https://github.com/CloudZ04/devops-assessment2-cd.git'
             }
         }
 
