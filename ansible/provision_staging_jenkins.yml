@@ -26,17 +26,3 @@
         count: 1
         state: running
       register: ec2_result
-
-    - name: Add new instance to dynamic inventory
-      add_host:
-        name: "{{ ec2_result.instances[0].public_ip_address }}"
-        groups: ec2_staging
-        ansible_user: ubuntu
-
-    - name: Wait for SSH
-      wait_for:
-        host: "{{ ec2_result.instances[0].public_ip_address }}"
-        port: 22
-        delay: 15
-        timeout: 300
-        state: started
