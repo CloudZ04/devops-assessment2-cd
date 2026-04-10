@@ -75,7 +75,13 @@ pipeline {
                         echo "$VAULT_PASS" > .vault_pass.txt
                         export ANSIBLE_HOST_KEY_CHECKING=False
                         ls -l "$SSH_KEY"
-                        ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@"${TARGET_PRIVATE_IP}" "echo ok-from-jenkins-cred"
+                        for i in {1..18}; do
+                            if ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@"${TARGET_PRIVATE_IP}" "echo ok-from-jenkins-cred"; then
+                                break
+                            fi
+                            echo "SSH not ready yet, retrying in 10s..."
+                            sleep 10
+                        done
                         ansible-playbook ansible/playbook.yml \
                           -i "${TARGET_PRIVATE_IP}," \
                           -u ubuntu \
