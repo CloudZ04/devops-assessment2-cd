@@ -1,0 +1,16 @@
+# Secrets / keys
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Ansible temp/retry
+*.retry
+
+# Local Jenkins/runtime artifacts
+.vault_pass.txt
+vault_pass.txt
