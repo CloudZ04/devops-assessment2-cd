@@ -28,22 +28,38 @@ pipeline {
         stage('Resolve New Instance IP') {
             steps {
                 script {
-                    env.TARGET_IP = sh(
+                    env.TARGET_PUBLIC_IP = sh(
                         returnStdout: true,
                         script: '''
                             aws ec2 describe-instances \
-                              --region "$AWS_REGION" \
-                              --filters "Name=tag:Name,Values=$INSTANCE_TAG_NAME" "Name=instance-state-name,Values=running" \
-                              --query "Reservations[].Instances[] | sort_by(@,&LaunchTime)[-1].PublicIpAddress" \
-                              --output text
+                            --region "$AWS_REGION" \
+                            --filters "Name=tag:Name,Values=$INSTANCE_TAG_NAME" "Name=instance-state-name,Values=running" \
+                            --query "Reservations[].Instances[] | sort_by(@,&LaunchTime)[-1].PublicIpAddress" \
+                            --output text
                         '''
                     ).trim()
 
-                    if (!env.TARGET_IP || env.TARGET_IP == 'None' || env.TARGET_IP == 'null') {
+                    env.TARGET_PRIVATE_IP = sh(
+                        returnStdout: true,
+                        script: '''
+                            aws ec2 describe-instances \
+                            --region "$AWS_REGION" \
+                            --filters "Name=tag:Name,Values=$INSTANCE_TAG_NAME" "Name=instance-state-name,Values=running" \
+                            --query "Reservations[].Instances[] | sort_by(@,&LaunchTime)[-1].PrivateIpAddress" \
+                            --output text
+                        '''
+                    ).trim()
+
+                    if (!env.TARGET_PUBLIC_IP || env.TARGET_PUBLIC_IP == 'None' || env.TARGET_PUBLIC_IP == 'null') {
                         error('Could not resolve target instance public IP')
                     }
 
-                    echo "Deploy target IP: ${env.TARGET_IP}"
+                    if (!env.TARGET_PRIVATE_IP || env.TARGET_PRIVATE_IP == 'None' || env.TARGET_PRIVATE_IP == 'null') {
+                        error('Could not resolve target instance private IP')
+                    }
+
+                    echo "Deploy target public IP: ${env.TARGET_PUBLIC_IP}"
+                    echo "Deploy target private IP: ${env.TARGET_PRIVATE_IP}"
                 }
             }
         }
@@ -59,7 +75,7 @@ pipeline {
                         echo "$VAULT_PASS" > .vault_pass.txt
 
                         ansible-playbook ansible/playbook.yml \
-                          -i "${TARGET_IP}," \
+                          -i "${TARGET_PRIVATE_IP}," \
                           -u ubuntu \
                           --private-key "$SSH_KEY" \
                           --vault-password-file .vault_pass.txt \
@@ -76,7 +92,7 @@ pipeline {
             steps {
                 sh '''
                     sleep 10
-                    curl -f "http://${TARGET_IP}" >/dev/null
+                    curl -f "http://${TARGET_PUBLIC_IP}" >/dev/null
                 '''
             }
         }
