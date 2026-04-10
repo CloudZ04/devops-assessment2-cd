@@ -73,7 +73,8 @@ pipeline {
                     sh '''
                         set -e
                         echo "$VAULT_PASS" > .vault_pass.txt
-
+                        export ANSIBLE_HOST_KEY_CHECKING=False
+                        
                         ansible-playbook ansible/playbook.yml \
                           -i "${TARGET_PRIVATE_IP}," \
                           -u ubuntu \
