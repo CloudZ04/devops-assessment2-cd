@@ -74,7 +74,8 @@ pipeline {
                         set -e
                         echo "$VAULT_PASS" > .vault_pass.txt
                         export ANSIBLE_HOST_KEY_CHECKING=False
-                        
+                        ls -l "$SSH_KEY"
+                        ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@"${TARGET_PRIVATE_IP}" "echo ok-from-jenkins-cred"
                         ansible-playbook ansible/playbook.yml \
                           -i "${TARGET_PRIVATE_IP}," \
                           -u ubuntu \
